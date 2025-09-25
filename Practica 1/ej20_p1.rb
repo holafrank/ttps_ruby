@@ -3,7 +3,8 @@
 # multiplos_de_3_y_5(100) # => 315
 
 def multiplos_de_3_y_5(tope)
-  tope.times.select { |num| num.remainder(3).zero? && num.remainder(5).zero? }
+  a = tope.times.select { |num| num.remainder(3).zero? && num.remainder(5).zero? }
+  a.each.sum
 end
 
 p multiplos_de_3_y_5(100)
