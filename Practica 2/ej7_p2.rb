@@ -1,16 +1,10 @@
-# 6. Modelá con una jerarquía de clases la siguiente situación:
-# Los usuarios finales de una aplicación tienen los atributos básicos que permiten identificarlos
-# (usuario, clave, email - los que consideres necesarios), y un rol que determina qué operaciones pueden hacer.
-# Los roles posibles son: Lector, Redactor, Director y Administrador.
-# Cada usuario gestiona Documentos según su rol le permita, acorde a las siguientes reglas:
-# • Los Lectores pueden ver cualquier Documento que esté marcado como público.
-# • Los Redactores pueden hacer todo lo que los Lectores y además pueden cambiar el contenido de los Documentos
-# que ellos crearon.
-# • Los Directores pueden ver y cambiar el contenido de cualquier documento
-# (público o privado, y creado por cualquier usuario), excepto aquellos que hayan sido borrados.
-# • Los Administradores pueden hacer lo mismo que los directores y además pueden borrar Documentos.
-# Utilizando el siguiente código para la clase Documento, implementá las clases que consideres necesarias para representar
-# a los usuarios y sus roles, completando la funcionalidad aquí presente:
+# 7. Luego de implementar el ejercicio anterior, modificalo para que los usuarios implementen el método #to_s
+# que debe retornar el atributo usuario (o email, según hayas decidido utilizar) y el rol que posee.
+# Por ejemplo:
+# lector.to_s
+# => "elhector@example.org (Lector)"
+# administrador.to_s
+# => "admin@example.org (Administrador)"
 
 # Documento
 class Documento
@@ -46,18 +40,15 @@ end
 
 # Usuario
 class Usuario
-
   attr_accessor :usuario
 
   def initialize(usuario, clave, email, rol)
     @usuario = usuario
     @clave = clave.hash
     @email = email
-    if rol == :lector || :redactor || :director || :administrador
-      @rol = rol
-    else
-      raise 'No se pudo crear rol.'
-    end
+    raise 'No se pudo crear rol.' unless rol == :lector || :redactor || :director || :administrador
+
+    @rol = rol
   end
 
   def crear_documento(contenido)
@@ -74,6 +65,13 @@ class Usuario
 
   def borrar_documento(doc)
     doc.borrar if puede_borrar?
+  end
+
+  # => "elhector@example.org (Lector)"
+  # administrador.to_s
+  # => "admin@example.org (Administrador)"
+  def to_s
+    "#{@email}(#{@rol})@example.org"
   end
 
   private

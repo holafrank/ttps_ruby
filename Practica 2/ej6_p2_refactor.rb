@@ -17,30 +17,22 @@ class Documento
   attr_accessor :creador, :contenido, :publico, :borrado
 
   def initialize(usuario, publico = true, contenido = '')
-    self.creador = usuario
-    self.publico = publico
-    self.contenido = contenido
-    self.borrado = false
+    @creador = usuario
+    @publico = publico
+    @contenido = contenido
+    @borrado = false
   end
 
   def borrar
-    self.borrado = true
-  end
-
-  def puede_ser_visto_por?(usuario)
-    usuario.puede_ver? self
-  end
-
-  def puede_ser_modificado_por?(usuario)
-    usuario.puede_modificar? self
-  end
-
-  def puede_ser_borrado_por?(usuario)
-    usuario.puede_borrar? self
+    @borrado = true
   end
 
   def es_creador(usuario)
     @creador.equal?(usuario)
+  end
+
+  def modificar(contenido_nuevo)
+    @contenido = contenido_nuevo
   end
 end
 
@@ -53,11 +45,7 @@ class Usuario
     @usuario = usuario
     @clave = clave.hash
     @email = email
-    if rol == :lector || :redactor || :director || :administrador
-      @rol = rol
-    else
-      raise 'No se pudo crear rol.'
-    end
+    @rol = rol
   end
 
   def crear_documento(contenido)
@@ -65,44 +53,77 @@ class Usuario
   end
 
   def ver_documento(doc)
-    p doc if puede_ver?
+    p doc if @rol.puede_ver?
   end
 
   def modificar_documento(doc, contenido_nuevo)
-    doc.contenido = contenido_nuevo if puede_modificar?(doc)
+    doc.modificar(contenido_nuevo) if @rol.puede_modificar?(doc, self)
   end
 
   def borrar_documento(doc)
-    doc.borrar if puede_borrar?
+    doc.borrar if @rol.puede_borrar?
   end
 
-  private
+end
 
+# Rol
+class Rol
   def puede_ver?(doc)
-    case @rol
-    when :lector || :redactor
-      doc.publico
-    when :director || :administrador
-      true
-    else
-      false
-    end
+    doc.publico
   end
 
-  def puede_modificar?(doc)
-    case @rol
-    when :redactor
-      doc.es_creador(self)
-    when :director
-      !doc.borrado
-    when :administrador
-      true
-    else
-      false
-    end
+  def puede_modificar?(doc, usuario)
+    false
   end
 
   def puede_borrar?
-    @rol == :administrador
+    false
+  end
+end
+
+# Los Lectores pueden ver cualquier Documento que esté marcado como público.
+# Pero nada más.
+# puede_ver?(doc) hereda de Rol
+# puede_modificar?(doc) hereda de Rol
+# puede_borrar? hereda de Rol
+class Lector < Rol
+
+end
+
+# Los Redactores pueden hacer todo lo que los Lectores
+# y además pueden cambiar el contenido de los Documentos que ellos crearon.
+# puede_ver?(doc) hereda de Rol
+# puede_borrar? hereda de Rol
+class Redactor < Rol
+  def puede_modificar?(doc, usuario)
+    doc.es_creador(usuario)
+  end
+end
+
+# Los Directores pueden ver y cambiar el contenido de cualquier documento
+# (público o privado, y creado por cualquier usuario), excepto aquellos que hayan sido borrados.
+# puede_borrar? hereda de Rol
+class Director < Rol
+  def puede_ver?(doc)
+    true
+  end
+
+  def puede_modificar?(doc, usuario)
+    !doc.borrado
+  end
+end
+
+# Los Administradores pueden hacer lo mismo que los directores y además pueden borrar Documentos.
+class Administrador
+  def puede_ver?(doc)
+    true
+  end
+
+  def puede_modificar?(doc, usuario)
+    true
+  end
+
+  def puede_borrar?(doc)
+    true
   end
 end
